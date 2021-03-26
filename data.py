@@ -16,11 +16,11 @@ def closest_player_time(match, **kwds):
 
     try:
         prev_data = corresponding.loc[deltas.idxmin()]
-        new_time = prev_data.date
+        new_idx = prev_data.idx
     except ValueError:  # no items
-        new_time = match.date
+        new_idx = 0
     
-    match.date = new_time
+    match.idx = new_idx
     return match
 
 # get closest match from "df2" to a row from "match"
@@ -36,11 +36,11 @@ def closest_team_time(match, **kwds):
 
     try:
         prev_data = corresponding.loc[deltas.idxmin()]
-        new_time = prev_data.date
+        new_idx = prev_data.idx
     except ValueError:  # no items
-        new_time = match.date
+        new_idx = 0
     
-    match.date = new_time
+    match.idx = new_idx
     return match
 
 def main():
@@ -53,16 +53,28 @@ def main():
 
     match = pd.read_csv('match.csv')
     match['date'] = pd.to_datetime(match['date'])
+    idx = []
+    for i in range(len(match.index)):
+        idx += [0]
+    match.insert(0, "idx", idx)
     old_match = match.copy()
 
     team_attributes = pd.read_csv('team_attributes.csv')
     team_attributes['date'] = pd.to_datetime(team_attributes['date'])
+    idx = []
+    for i in range(len(team_attributes.index)):
+        idx += [i]
+    team_attributes.insert(0, "idx", idx)
     old_team_attributes = team_attributes.copy()
 
     player_attributes = pd.read_csv('player_attributes.csv')
     player_attributes['date'] = pd.to_datetime(player_attributes['date'])
+    idx = []
+    for i in range(len(player_attributes.index)):
+        idx += [i]
+    player_attributes.insert(0, "idx", idx)
     old_player_attributes = player_attributes.copy()
-
+    
     ####################### Merge Country and League Data #######################
     country.rename(columns={'name':'country_name'}, inplace=True)
     match = match.merge(country, how='left', on='country_id')
@@ -71,27 +83,33 @@ def main():
 
     ####################### Merge Team Data #######################
     loc = 'home'
+    match = match.assign(idx=0)
     match = match.apply(closest_team_time, df2=team_attributes, loc = loc, axis=1)
 
     team_attributes.columns = f'{loc}_' + old_team_attributes.columns.values
-    match = match.merge(team_attributes, how='left', left_on=[f'{loc}_team_id', 'date'], right_on=[f'{loc}_team_id', f'{loc}_date']).drop(f'{loc}_date', axis=1)
+    team_attributes = team_attributes.rename(columns = {f'{loc}_team_id':f'{loc}_team_id_copy'})
+    match = match.merge(team_attributes, how='left', left_on=[f'idx'], right_on=[f'{loc}_idx']).drop([f'{loc}_idx', f'{loc}_team_id_copy', f'{loc}_date'], axis=1)
 
-    match.loc[match.match_id.isin(old_match.match_id), ['date']] = old_match[['date']]
-
+    # match.loc[match.match_id.isin(old_match.match_id), ['date']] = old_match[['date']]
 
     team_attributes = old_team_attributes.copy()
     loc = 'away'
+    match = match.assign(idx=0)
     match = match.apply(closest_team_time, df2=team_attributes, loc = loc, axis=1)
 
     team_attributes.columns = f'{loc}_' + old_team_attributes.columns.values
-    match = match.merge(team_attributes, how='left', left_on=[f'{loc}_team_id', 'date'], right_on=[f'{loc}_team_id', f'{loc}_date']).drop(f'{loc}_date', axis=1)
+    team_attributes = team_attributes.rename(columns = {f'{loc}_team_id':f'{loc}_team_id_copy'})
+    match = match.merge(team_attributes, how='left', left_on=[f'idx'], right_on=[f'{loc}_idx']).drop([f'{loc}_idx', f'{loc}_team_id_copy', f'{loc}_date'], axis=1)
 
-    match.loc[match.match_id.isin(old_match.match_id), ['date']] = old_match[['date']]
+    # match.loc[match.match_id.isin(old_match.match_id), ['date']] = old_match[['date']]
 
     # ####################### Merge Player Data #######################
     loc = 'home'
     for i in range(1, 12):
         print(loc, i)
+        print(len(match.index))
+        
+        match = match.assign(idx=0)
         # to reset column names
         player_attributes = old_player_attributes.copy()
         player = old_player.copy()
@@ -101,18 +119,19 @@ def main():
 
         # rename columns and combine
         player_attributes.columns = f'{loc}_' + old_player_attributes.columns.values + f'_{i}'
-        match = match.merge(player_attributes, how='left', left_on=[f'{loc}_player_{i}', 'date'], 
-            right_on=[f'{loc}_player_id_{i}', f'{loc}_date_{i}']).drop([f'{loc}_player_id_{i}', f'{loc}_date_{i}'], axis=1)
+        match = match.merge(player_attributes, how='left', left_on=['idx'], 
+            right_on=[f'{loc}_idx_{i}']).drop([f'{loc}_idx_{i}', f'{loc}_player_id_{i}', f'{loc}_date_{i}'], axis=1)
         
         player.columns = f'{loc}_' + old_player.columns.values + f'_{i}'
         match = match.merge(player, how='left', left_on=[f'{loc}_player_{i}'], 
             right_on=[f'{loc}_player_id_{i}']).drop([f'{loc}_player_id_{i}'], axis=1)
-
-        match.loc[match.match_id.isin(old_match.match_id), ['date']] = old_match[['date']]
 
     loc = 'away'
     for i in range(1, 12):
         print(loc, i)
+        print(len(match.index))
+
+        match = match.assign(idx=0)
         # to reset column names
         player_attributes = old_player_attributes.copy()
         player = old_player.copy()
@@ -122,16 +141,22 @@ def main():
 
         # rename columns and combine
         player_attributes.columns = f'{loc}_' + old_player_attributes.columns.values + f'_{i}'
-        match = match.merge(player_attributes, how='left', left_on=[f'{loc}_player_{i}', 'date'], 
-            right_on=[f'{loc}_player_id_{i}', f'{loc}_date_{i}']).drop([f'{loc}_player_id_{i}', f'{loc}_date_{i}'], axis=1)
+        match = match.merge(player_attributes, how='left', left_on=['idx'], 
+            right_on=[f'{loc}_idx_{i}']).drop([f'{loc}_idx_{i}', f'{loc}_player_id_{i}', f'{loc}_date_{i}'], axis=1)
         
         player.columns = f'{loc}_' + old_player.columns.values + f'_{i}'
         match = match.merge(player, how='left', left_on=[f'{loc}_player_{i}'], 
             right_on=[f'{loc}_player_id_{i}']).drop([f'{loc}_player_id_{i}'], axis=1)
 
-        match.loc[match.match_id.isin(old_match.match_id), ['date']] = old_match[['date']]
-
+    match.drop(['idx'], axis=1)
     match.to_csv('match_team_player.csv', index=False)
+
+
+def check_data():
+    match = pd.read_csv('match_team_player.csv')
+    print(len(match['date']))
+    print(match['date'].unique)
+    
 
 if __name__ == "__main__":
     # res = pd.read_csv('match_team_player.csv')
@@ -144,4 +169,5 @@ if __name__ == "__main__":
     # print(len(res.columns))
     # res.to_csv('match_team_player_new.csv', index=False)
     # exit()
-    main()
+    # main()
+    check_data()

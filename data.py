@@ -18,7 +18,7 @@ def closest_player_time(match, **kwds):
         prev_data = corresponding.loc[deltas.idxmin()]
         new_idx = prev_data.idx
     except ValueError:  # no items
-        new_idx = 0
+        new_idx = -1
     
     match.idx = new_idx
     return match
@@ -38,7 +38,7 @@ def closest_team_time(match, **kwds):
         prev_data = corresponding.loc[deltas.idxmin()]
         new_idx = prev_data.idx
     except ValueError:  # no items
-        new_idx = 0
+        new_idx = -1
     
     match.idx = new_idx
     return match
@@ -55,7 +55,7 @@ def main():
     match['date'] = pd.to_datetime(match['date'])
     idx = []
     for i in range(len(match.index)):
-        idx += [0]
+        idx += [-1]
     match.insert(0, "idx", idx)
     old_match = match.copy()
 
@@ -83,7 +83,7 @@ def main():
 
     ####################### Merge Team Data #######################
     loc = 'home'
-    match = match.assign(idx=0)
+    match = match.assign(idx=-1)
     match = match.apply(closest_team_time, df2=team_attributes, loc = loc, axis=1)
 
     team_attributes.columns = f'{loc}_' + old_team_attributes.columns.values
@@ -94,7 +94,7 @@ def main():
 
     team_attributes = old_team_attributes.copy()
     loc = 'away'
-    match = match.assign(idx=0)
+    match = match.assign(idx=-1)
     match = match.apply(closest_team_time, df2=team_attributes, loc = loc, axis=1)
 
     team_attributes.columns = f'{loc}_' + old_team_attributes.columns.values
@@ -109,7 +109,7 @@ def main():
         print(loc, i)
         print(len(match.index))
         
-        match = match.assign(idx=0)
+        match = match.assign(idx=-1)
         # to reset column names
         player_attributes = old_player_attributes.copy()
         player = old_player.copy()
@@ -131,7 +131,7 @@ def main():
         print(loc, i)
         print(len(match.index))
 
-        match = match.assign(idx=0)
+        match = match.assign(idx=-1)
         # to reset column names
         player_attributes = old_player_attributes.copy()
         player = old_player.copy()
@@ -148,15 +148,23 @@ def main():
         match = match.merge(player, how='left', left_on=[f'{loc}_player_{i}'], 
             right_on=[f'{loc}_player_id_{i}']).drop([f'{loc}_player_id_{i}'], axis=1)
 
-    match.drop(['idx'], axis=1)
+    match = match.drop(['idx'], axis=1)
     match.to_csv('match_team_player.csv', index=False)
 
 
 def check_data():
     match = pd.read_csv('match_team_player.csv')
+    print(len(match.columns))
+    # match = match.drop(['idx'], axis=1)
     print(len(match['date']))
     print(match['date'].unique)
-    
+    # match.to_csv('match_team_player.csv', index=False)
+
+    league = pd.read_csv('league.csv')
+    print(len(league['league_id']))  
+    print(league['league_id'].unique)
+  
+
 
 if __name__ == "__main__":
     # res = pd.read_csv('match_team_player.csv')

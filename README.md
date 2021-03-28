@@ -2,7 +2,7 @@
 This contains the code, data, and final report. The goal of this project is to figure out which characteristics of players and teams are the most impactful on team success.
 
 ## Report
-The folder report.pdf contains the final report.
+report.pdf contains the final report.
 
 ## Data
 All the original csv files are included in this folder.

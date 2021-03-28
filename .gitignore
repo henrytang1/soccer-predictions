@@ -7,3 +7,15 @@ FullData.csv
 player_actual_pos.csv
 match_team_player_w_position.csv
 player_attributes_w_position.csv
+sort.py 
+Neural\ Network/
+data.ipynb
+sorted_match_player.csv
+sorted_match_player2.csv
+Loss NN.PNG
+losses.PNG
+LossNN2.PNG
+LossNN3.PNG
+accuracy.PNG
+.ipynb_checkpoints
+

@@ -4,7 +4,6 @@ match_team_player.csv
 scrape/
 new_stuff.csv
 FullData.csv
-player_actual_pos.csv
 match_team_player_w_position.csv
 player_attributes_w_position.csv
 sort.py 

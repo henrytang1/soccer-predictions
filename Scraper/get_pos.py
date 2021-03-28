@@ -37,7 +37,7 @@ def get_poss(endpoint):
             p = g.findAll('p')
             if p != None and "Position" in p[0].text and len(p) > 2:
                 # print(z.text)
-                if z.text != "Sub":
+                if z.text != "Sub" and z.text != "Res":
                     return z.text
                 else:
                     break
@@ -55,4 +55,4 @@ def get_poss(endpoint):
     return None
 
 if __name__ == "__main__":
-    get_poss("/player/226856/aminou-bouba/fifa15/")
+    print(get_poss("/player/207716/abdullah-al-hafith/fifa16/"))

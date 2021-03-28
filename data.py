@@ -153,6 +153,7 @@ def main():
     match.to_csv('match_team_player_w_position.csv', index=False)
 
 
+# used to verify data is correct
 def check_data():
     match = pd.read_csv('match_team_player.csv')
     print(len(match.columns))
@@ -164,44 +165,29 @@ def check_data():
     league = pd.read_csv('league.csv')
     print(len(league['league_id']))  
     print(league['league_id'].unique)
-  
-
-def add_position():
-    player = pd.read_csv('player.csv')
-    pos = pd.read_csv('FullData.csv')
-    # print(pos.columns)
-    player = player.merge(pos[['Name', 'Club_Position']], how='left', left_on=['player_name'], 
-            right_on=['Name']).drop([f'Name'], axis=1)
-    
-    player.to_csv('new_stuff.csv', index=False)
-    print(player)
 
 
+# add actual position for a row
+idx = 0
 def search_player(row, **kwds):
+    global idx
+    idx += 1
+    cur_idx = idx
+    print(cur_idx)
     df_list = kwds['df_list']
     num_years = kwds['num_years']
     df = None
     exists = False
-    # print(row.player_name)
-    # print(df_list[0].iloc[2]['Name'])
-    # print(row.player_name == df_list[0].iloc[2]['Name'])
-    # print("WWWW")
     for i in range(num_years-1, -1, -1):
-        # print(i)
         cur_df = df_list[i]
-        # print("asdf")
-        # print(cur_df)
-        if cur_df['Name'].str.contains(row.player_name).any():
-            df = cur_df.loc[(cur_df['Name'] == row['player_name'])]
+        if cur_df['Name'].str.contains(row['player_name']).any():
+            df = cur_df[cur_df['Name'].str.contains(row['player_name'])]
             exists = True
             break
 
-    # break
     if not exists:
         print(f"{row.player_name} not found in FIFA")
         return row
-    # print(df.iloc[0]['url'])
-    # exit()
 
     row.real_pos = get_poss(df.iloc[0]['url'])
     print(f"{row.player_name} has position {row.real_pos}")
@@ -209,39 +195,25 @@ def search_player(row, **kwds):
     return row
 
 
+# add actual position for all rows
 def get_pos():
-    player = pd.read_csv('player_actual_pos.csv')
+    player = pd.read_csv('player.csv')
     idx = []
     for i in range(len(player.index)):
         idx += [None]
     player.insert(len(player.columns), "real_pos", idx)
 
-    # print(player.columns)
-
     df_list = []
     year = ['09', '10', '11', '12', '13', '14', '15', '16']
     for y in year:
-        df_list += [pd.read_csv(f'Scraper/Names-{y}.csv')]
+        df_list += [pd.read_csv(f'Scraper/Names-{y}-new.csv')]
         df_list[-1]['Name'] = df_list[-1]['Name'].apply(lambda x: x.replace(f" FIFA {y}", ""))
-        
-        # print(df_list[-1])
 
     player = player.apply(search_player, df_list=df_list, num_years = len(year), axis=1)
 
-    player.to_csv('new_stuff.csv', index=False)
+    player.to_csv('player_actual_pos_test.csv', index=False)
 
 
 if __name__ == "__main__":
-    # res = pd.read_csv('match_team_player.csv')
-    # print(len(res.columns))
-    # col = []
-    # for i in range(1, 12):
-    #     col += [f'home_player_id_{i}']
-    #     col += [f'away_player_id_{i}']
-    # res = res.drop(col, axis=1)
-    # print(len(res.columns))
-    # res.to_csv('match_team_player_new.csv', index=False)
-    # exit()
-    # main()
-    # check_data()
-    get_pos()
+    main()
+    # get_pos()

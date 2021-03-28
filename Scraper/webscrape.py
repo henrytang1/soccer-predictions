@@ -10,7 +10,7 @@ url = "https://www.fifaindex.com"
 # }
 
 # year = ['09', '10', '11', '12', '13', '14', '15', '16']
-year = ['14', '15', '16']
+year = ['12', '13']
 
 for y in year:
 	temp_df = pd.read_csv(f'Names-{y}.csv')
